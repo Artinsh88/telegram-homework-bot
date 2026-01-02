@@ -136,11 +136,11 @@ async def receive_hw(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"📚 مقطع: {info['grade']}"
     )
 
-async def report(update: Update, c
-
-ontext: ContextTypes.DEFAULT_TYPE):
-    if update.message.from_user.username != ADMIN_USERNAME:
-        await update.message.reply_text("❌ دسترسی نداری")
+async def register(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    
+    if get_user_info(user_id):
+        await update.message.reply_text("✅ شما قبلاً ثبت‌نام کردید")
         return
 
     try:
@@ -224,4 +224,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
