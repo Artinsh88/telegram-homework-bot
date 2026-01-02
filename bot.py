@@ -11,14 +11,12 @@ from telegram.ext import (
     ContextTypes
 )
 
-# ========= تنظیمات =========
-TOKEN = os.environ.get("7826136781:AAGESNdUORoMolYAfK9SidodzXQkurp6xsQ")  # در Railway تنظیم می‌کنی
-ADMIN_USERNAME = "Akingshah"  # یوزرنیم مدیر (بدون @)
+TOKEN = os.environ.get("7826136781:AAGESNdUORoMolYAfK9SidodzXQkurp6xsQ")
+ADMIN_USERNAME = "Akingshah"
 
 USERS_FILE = "users.csv"
 HW_FILE = "homework.csv"
 
-# ========= ساخت فایل‌ها =========
 def init_files():
     if not os.path.exists(USERS_FILE):
         with open(USERS_FILE, "w", newline="", encoding="utf-8") as f:
@@ -30,7 +28,6 @@ def init_files():
                 ["user_id", "name", "grade", "date", "time", "weekday", "status"]
             )
 
-# ========= ابزار =========
 def get_user_info(user_id):
     try:
         with open(USERS_FILE, encoding="utf-8") as f:
@@ -51,7 +48,6 @@ def already_sent(user_id, date_str):
         init_files()
     return False
 
-# ========= دستورات =========
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "سلام 🌸\n"
@@ -96,7 +92,6 @@ async def receive_hw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     date_str = now.strftime("%Y-%m-%d")
     weekday = now.strftime("%A")
 
-    # تبدیل نام روز به فارسی
     days_fa = {
         "Saturday": "شنبه",
         "Sunday": "یکشنبه",
@@ -108,7 +103,6 @@ async def receive_hw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }
     weekday_fa = days_fa.get(weekday, weekday)
 
-    # قانون پنجشنبه / جمعه
     if weekday == "Friday":
         yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
         if already_sent(user.id, yesterday):
@@ -132,8 +126,7 @@ async def receive_hw(update: Update, context: ContextTypes.DEFAULT_TYPE):
             date_str,
             time_str,
             weekday_fa,
-
-status
+            status
         ])
 
     await update.message.reply_text(
@@ -143,7 +136,9 @@ status
         f"📚 مقطع: {info['grade']}"
     )
 
-async def report(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def report(update: Update, c
+
+ontext: ContextTypes.DEFAULT_TYPE):
     if update.message.from_user.username != ADMIN_USERNAME:
         await update.message.reply_text("❌ دسترسی نداری")
         return
@@ -163,7 +158,6 @@ async def report(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text += f"\n✅ مجموع: {len(df)} تکلیف"
         await update.message.reply_text(text)
 
-        # ساخت فایل اکسل
         excel_file = "report.xlsx"
         df.to_excel(excel_file, index=False, encoding="utf-8")
 
@@ -201,27 +195,33 @@ async def my_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"📊 تعداد تکالیف ارسالی: 0"
         )
 
-# ========= اجرا =========
 def main():
-    # ابتدا فایل‌ها را بساز
+    print("🤖 در حال راه‌اندازی ربات...")
     init_files()
 
-    # ساخت اپلیکیشن
-    app = Application.builder().token(TOKEN).build()
+    if not TOKEN:
+        print("❌ خطا: TOKEN پیدا نشد!")
+        print("✅ در Railway: Variables → TOKEN را اضافه کن")
+        return
 
-    # اضافه کردن دستورات
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("report", report))
-    app.add_handler(CommandHandler("mystatus", my_status))
+    try:
+        app = Application.builder().token(TOKEN).build()
 
-    # ثبت‌نام (پیام متنی)
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, register))
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CommandHandler("report", report))
+        app.add_handler(CommandHandler("mystatus", my_status))
+        app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, register))
+        app.add_handler(MessageHandler(filters.PHOTO | filters.Document.ALL, receive_hw))
 
-    # دریافت تکلیف (عکس/فایل)
-    app.add_handler(MessageHandler(filters.PHOTO | filters.Document.ALL, receive_hw))
+        print("✅ ربات راه‌اندازی شد")
+        print("⏳ در حال اتصال به تلگرام...")
 
-    print("🤖 ربات تکلیف‌یاب روشن شد...")
-    app.run_polling()
+        app.run_polling()
 
-if name == "__main__":
+    except Exception as e:
+        print(f"❌ خطا در اجرای ربات: {e}")
+        print("ℹ️  ممکن است توکن نامعتبر باشد")
+
+if __name__ == "__main__":
     main()
+
